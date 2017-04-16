@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Poke Move Assessor</string>
+    <string name="action_settings">Settings</string>
+    <string name="hint_poke_name">Pokemon name</string>
+    <string name="hint_poke_move">Pokemon move</string>
+    <string name="hint_determine">Determine if move will affect the selected pokemon</string>
+</resources>
