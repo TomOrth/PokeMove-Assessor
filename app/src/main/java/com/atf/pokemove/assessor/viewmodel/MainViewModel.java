@@ -8,6 +8,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -17,17 +18,19 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.atf.pokemove.assessor.model.PokeData;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MainViewModel extends BaseObservable {
     private Context context;
     private String pokeName, pokeMove, nameType, moveType;
-    private final String urlMove = "https://pokeapi.co/api/v2/move/", urlName = "https://pokeapi.co/api/v2/type/";
+    private final String urlMove = "https://pokeapi.co/api/v2/move/", urlName = "https://pokeapi.co/api/v2/pokemon/";
     private RequestQueue requestQueue;
     private PokeData poke;
     public ObservableInt determineValueVisibility;
     public ObservableField<String> determineValue;
+
     public MainViewModel(Context context){
         this.context = context;
         requestQueue = Volley.newRequestQueue(context);
@@ -74,19 +77,16 @@ public class MainViewModel extends BaseObservable {
         };
     }
 
-    public void createResult(View view){
-        nameRequest();
-        Log.d("nameType", poke.getNameType());
-        Log.d("moveType", poke.getMoveType());
-    }
-
-    public void nameRequest(){
+    public void nameRequest(View view){
         JsonObjectRequest name = new JsonObjectRequest(Request.Method.GET, urlName + poke.getName(), null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try{
-                            poke.setNameType(response.getString("type"));
+                            JSONArray types = response.getJSONArray("types");
+                            JSONObject obj = types.getJSONObject(0);
+                            JSONObject subObj = obj.getJSONObject("type");
+                            poke.setNameType(subObj.getString("name"));
                             moveRequest();
                         } catch (JSONException e){
                             e.printStackTrace();
@@ -104,13 +104,15 @@ public class MainViewModel extends BaseObservable {
     }
 
     public void moveRequest(){
-        JsonObjectRequest move = new JsonObjectRequest(Request.Method.GET, urlName + poke.getName(), null,
+        JsonObjectRequest move = new JsonObjectRequest(Request.Method.GET, urlMove + poke.getMove(), null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try{
                             JSONObject obj = response.getJSONObject("type");
                             poke.setMoveType(obj.getString("name"));
+                            determineValue.set(poke.determineVulnerability());
+                            determineValueVisibility.set(View.VISIBLE);
                         } catch (JSONException e){
                             e.printStackTrace();
                         }
@@ -125,4 +127,5 @@ public class MainViewModel extends BaseObservable {
                 });
         requestQueue.add(move);
     }
+
 }
